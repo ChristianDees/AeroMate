@@ -33,7 +33,7 @@ if (isset($_GET['id'])){
 if (isset($_GET['flightID'])) {
     $flightID = $_GET['flightID'];
     $bookingMsg = "Flight $flightID successfully unbooked!";
-} else die();
+} 
 ?>
 
 

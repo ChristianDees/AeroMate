@@ -33,7 +33,7 @@ if (!empty($_POST) && isset($_POST['Submit'])) {
             alert('Welcome, $firstName $lastName');
             window.location.href = 'home.php?id=" . $row['id'] . "';
           </script>";
-  } else header("Location: create_passenger.php"); // Redirect to create account if new
+  } else header("Location: create_passenger.php?email=" . urlencode($email)); // Redirect to create account if new
   exit();
 }
 ?>

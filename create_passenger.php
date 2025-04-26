@@ -8,6 +8,7 @@ April 26, 2025
 session_start();
 require_once('config.php'); 
 
+$email = isset($_GET['email']) ? $_GET['email'] : "";
 if (isset($_POST['Submit'])) {
     // Get form data 
     $id = isset($_POST['id']) ? $_POST['id'] : "0"; // CHANGE THIS TO NOTHING BECUZ IT NEEDS TO BE AUTOINCRIMENTED
@@ -15,7 +16,7 @@ if (isset($_POST['Submit'])) {
     $lastName = isset($_POST['lastName']) ? $_POST['lastName'] : "";
     $nationality = isset($_POST['nationality']) ? $_POST['nationality'] : "";
     $passportNumber = isset($_POST['passportNumber']) ? $_POST['passportNumber'] : "";
-    $email = isset($_POST['email']) ? $_POST['email'] : "";
+    $email = isset($_POST['email']) ? $_POST['email'] : $email;
     $phone = isset($_POST['phone']) ? $_POST['phone'] : "";
     $frequentFlyer = isset($_POST['frequentFlyer']) ? 1 : 0;
 
@@ -35,13 +36,13 @@ if (isset($_POST['Submit'])) {
             $phone,
             $frequentFlyer
         );
-
+        
         // Execute the statement and alert
         if ($stmt->execute()) {
           $msg = "Successfully created passenger!";
           echo "<script>
               alert(" . json_encode($msg) . ");
-              window.location.href = '/home.php?id=" . $id . "';
+              window.location.href = 'home.php?id=" . $id . "';
           </script>";
           exit; 
         } else {
@@ -72,7 +73,11 @@ if (isset($_POST['Submit'])) {
 <body>
   <div class="account-create-container">
     <!-- Company logo + title -->
-    <div class="brand">AeroMate <i class="fas fa-plane-departure"></i></div> 
+    <div class="brand">
+      <a href="index.php" style="text-decoration: none;">
+          AeroMate <i class="fas fa-plane-departure"></i>
+      </a>
+    </div>
     <div class="title">Create Account</div>
     <form action="create_passenger.php" method="post"> 
       <div class="row">
@@ -102,7 +107,7 @@ if (isset($_POST['Submit'])) {
               <i class="fas fa-envelope"></i> 
               Email Address
             </label>
-            <input type="email" class="form-control" id="email"  name="email" placeholder="johnDoe@example.com" required>
+            <input type="email" class="form-control" id="email"  name="email" value="<?php echo htmlspecialchars($email); ?>" placeholder="johnDoe@example.com" required>
           </div>
         </div>
 

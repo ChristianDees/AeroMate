@@ -28,7 +28,7 @@ if (isset($_POST['id'])){
         $msg = "Successfully updated profile!";
         echo "<script>
             alert(" . json_encode($msg) . ");
-            window.location.href = '/home.php?id=" . $id . "';
+            window.location.href = 'home.php?id=" . $id . "';
         </script>";
         exit; 
     } else {
