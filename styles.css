@@ -1,0 +1,212 @@
+/* =======================
+   Global Styles
+========================== */
+body {
+    background: linear-gradient(to right, #e0f0ff, #cfe9ff, #b9dbff);
+    font-family: 'Segoe UI', sans-serif;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding-top: 80px;
+    padding-bottom: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* =======================
+     Typography
+  ========================== */
+  .brand {
+    font-weight: 700;
+    font-size: 2rem;
+    color: #007bff;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+  
+  .brand i {
+    font-size: 1.8rem;
+    color: #007bff;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #00254c;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .subheader {
+    font-weight: 600;
+    font-size: 2rem;
+    color: #007bff;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .criteria {
+    font-size: 1.2rem;
+    color: #00254c;
+    margin-bottom: 40px;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  /* =======================
+     Containers
+  ========================== */
+  .flight-search-container,
+  .results-container,
+  .account-create-container {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0, 123, 255, 0.2);
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 40px auto;
+    z-index: 1;
+  }
+  
+  .dashboard-wrapper {
+    background: #fff;
+    padding: 50px 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0, 123, 255, 0.2);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* =======================
+     Forms
+  ========================== */
+  .form-label {
+    color: #00254c;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .form-control:focus {
+    box-shadow: none;
+    border-color: #007bff;
+  }
+  
+  .form-column {
+    padding: 0 15px;
+  }
+  
+  .mb-4 {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* =======================
+     Input Icons
+  ========================== */
+  .input-icon {
+    position: relative;
+  }
+  
+  .input-icon i {
+    color: #007bff;
+  }
+  
+  .input-icon .fa-map-marker-alt,
+  .input-icon .fa-calendar-alt,
+  .input-icon .fa-user,
+  .input-icon .fa-passport,
+  .input-icon .fa-phone,
+  .input-icon .fa-globe,
+  .input-icon .fa-envelope {
+    font-size: 1.2rem;
+  }
+  
+  /* =======================
+     Buttons
+  ========================== */
+  .btn-primary {
+    background-color: #007bff;
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .btn-danger {
+    background-color: #dc3545;
+    border: none;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    height: 30px;
+    min-width: 80px;
+  }
+  
+  .btn-danger:hover {
+    background-color: #c82333;
+  }
+  
+  .menu-button {
+    margin: 12px 0;
+    padding: 14px 20px;
+    font-size: 1.05rem;
+    font-weight: 500;
+    width: 100%;
+    border-radius: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    transition: background-color 0.3s ease;
+  }
+  
+  .menu-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .logout-btn {
+    margin-top: 25px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    width: 100%;
+    border-radius: 10px;
+    background-color: #c82333;
+    color: white;
+    font-weight: 500;
+    border: none;
+    transition: background-color 0.3s ease;
+  }
+  
+  .logout-btn:hover {
+    background-color: #a71d2a;
+  }
+  
+  /* =======================
+     Flight Listings
+  ========================== */
+  .flight-item {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .flight-item:hover {
+    border-color: #007bff;
+  }
+  
+  .flight-details {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
+  .flight-info {
+    flex: 1;
+    margin-right: 15px;
+  }
+  
