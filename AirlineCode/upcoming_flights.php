@@ -9,31 +9,40 @@ session_start();
 require_once('config.php'); 
 require_once('validate_session.php');
 
-if (isset($_GET['id'])){
+if (isset($_GET['id'])) {
   $userID = $_GET['id'];
-  // Get upcoming flights (not completed)
-  $sql = "
-      SELECT f.FlightID, f.OriginLocation, f.DestinationLocation, f.DepartureTime, f.Gate, f.AssignedAircraft, f.FlightStatus
-      FROM booked b
-      JOIN Flight f ON b.flightID = f.FlightID
-      WHERE b.passengerID = ? AND f.FlightStatus != 'completed'
-  ";
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param('s', $userID); 
-  $stmt->execute();
-  $result = $stmt->get_result();
 
-  // Get upcoming flights into list
-  $flights = [];
-  while ($row = mysqli_fetch_array($result)){$flights[] = $row;}
-  $stmt->close();
+  // Get passengerID
+  $getPID = "SELECT id FROM Passenger WHERE userID = ?";
+  $stmtPID = $conn->prepare($getPID);
+  $stmtPID->bind_param('s', $userID);
+  $stmtPID->execute();
+  $resultPID = $stmtPID->get_result();
+
+  if ($row = $resultPID->fetch_assoc()) {
+      $passengerID = $row['id'];
+
+      // Get upcoming flights (flights not completed)
+      $sql = "SELECT f.FlightID, f.OriginLocation, f.DestinationLocation, f.DepartureTime, f.Gate, f.AssignedAircraft, f.FlightStatus FROM booked b JOIN Flight f ON b.flightID = f.FlightID WHERE b.passengerID = ? AND f.FlightStatus != 'completed'";
+      $stmt = $conn->prepare($sql);
+      $stmt->bind_param('s', $passengerID); 
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      // Put flights into list
+      $flights = [];
+      while ($row = mysqli_fetch_array($result)) $flights[] = $row;
+      $stmt->close();
+  } else $bookingMsg = "Passenger not found for this user.";
+  $stmtPID->close();
 }
 
-// Check if unbooked occurred
+// Unbooking message
 if (isset($_GET['flightID'])) {
-    $flightID = $_GET['flightID'];
-    $bookingMsg = "Flight $flightID successfully unbooked!";
-} 
+  $flightID = $_GET['flightID'];
+  $bookingMsg = "Flight $flightID successfully unbooked!";
+}
+
 ?>
 
 
@@ -51,7 +60,7 @@ if (isset($_GET['flightID'])) {
   <div class="results-container" id="results">
     <!-- Company logo -->
     <div class="brand">
-      <a href="home.php?id=<?php echo $_SESSION['user'] ?? ''; ?>" style="text-decoration: none;">
+      <a href="dashboard.php?id=<?php echo $_SESSION['user'] ?? ''; ?>" style="text-decoration: none;">
           AeroMate <i class="fas fa-plane-departure"></i>
       </a>
     </div>

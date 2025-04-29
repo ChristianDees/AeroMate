@@ -59,29 +59,47 @@ while ($row = mysqli_fetch_array($results)) {$flights[] = $row;}
 
 // Booking logic 
 if (isset($_POST['bookFlightID'])) {
-    // Get id from being logged in
-    $passengerID = $_SESSION['user']; 
-    $flightID = $_POST['bookFlightID'];
+  // Get user ID from session
+  $userID = $_SESSION['user']; 
+  $flightID = $_POST['bookFlightID'];
 
-    // Check if flight is already booked
-    $checkSql = "SELECT * FROM booked WHERE passengerID = ? AND flightID = ?";
-    $stmt = $conn->prepare($checkSql);
-    $stmt->bind_param('ss', $passengerID, $flightID);
-    $stmt->execute();
-    $checkResults = $stmt->get_result();
+  // Check if flight is already booked using the view
+  $checkSql = "SELECT * FROM BookedView WHERE userID = ? AND flightID = ?";
+  $stmt = $conn->prepare($checkSql);
+  $stmt->bind_param('ss', $userID, $flightID);
+  $stmt->execute();
+  $checkResults = $stmt->get_result();
 
-    // Result exists, meaning already booked
-    if ($checkResults->num_rows > 0) { $bookingMsg = "You have already booked this flight!";
-    } else {
-        // Flight not booked yet
-        $bookFlight = "INSERT INTO booked VALUES (?, ?, 'Booked')";
-        $stmtB = $conn->prepare($bookFlight);
-        $stmtB->bind_param('ss', $passengerID, $flightID);
-        if ($stmtB->execute()) $bookingMsg = "Flight $flightID successfully booked!";
-        else $bookingMsg = "Failed to book flight. Please try again.";
-        $stmtB->close();
-    }
-    $stmt->close();
+  if ($checkResults->num_rows > 0) {
+      // Already booked
+      $bookingMsg = "You have already booked this flight!";
+  } else {
+      // Get passengerID from userID
+      $getPID = "SELECT id FROM Passenger WHERE userID = ?";
+      $stmtPID = $conn->prepare($getPID);
+      $stmtPID->bind_param('s', $userID);
+      $stmtPID->execute();
+      $resultPID = $stmtPID->get_result();
+
+      if ($row = $resultPID->fetch_assoc()) {
+          $passengerID = $row['id'];
+
+          // Book the flight
+          $bookFlight = "INSERT INTO Booked VALUES (?, ?, 'Booked')";
+          $stmtB = $conn->prepare($bookFlight);
+          $stmtB->bind_param('ss', $passengerID, $flightID);
+          if ($stmtB->execute()) {
+              $bookingMsg = "Flight $flightID successfully booked!";
+          } else {
+              $bookingMsg = "Failed to book flight. Please try again.";
+          }
+          $stmtB->close();
+      } else {
+          $bookingMsg = "Passenger record not found.";
+      }
+      $stmtPID->close();
+  }
+  $stmt->close();
 }
 ?>
 
@@ -196,7 +214,7 @@ if (isset($_POST['bookFlightID'])) {
 
     <!-- Company logo -->
     <div class="brand">
-      <a href="home.php?id=<?php echo $_SESSION['user'] ?? ''; ?>" style="text-decoration: none;">
+      <a href="dashboard.php?id=<?php echo $_SESSION['user'] ?? ''; ?>" style="text-decoration: none;">
           AeroMate <i class="fas fa-plane-departure"></i>
       </a>
     </div>
@@ -259,7 +277,7 @@ if (isset($_POST['bookFlightID'])) {
         </select>
       </div>
 
-      <!-- Add reset button alongside the search button -->
+      <!-- Reset filters -->
       <div class="d-flex justify-content-between gap-3">
         <button type="submit" class="btn btn-primary w-75">Search Flights</button>
         <a href="book_flight.php" class="btn btn-secondary w-25">Reset Filters</a>
@@ -300,7 +318,7 @@ if (isset($_POST['bookFlightID'])) {
     </div>
   </div>
 
-  <!-- Automated scroll to results upon search -->
+  <!-- Scroll to results after search -->
   <script>
     // If any params, scroll
     window.onload = function() {

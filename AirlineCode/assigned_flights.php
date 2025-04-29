@@ -9,34 +9,19 @@ session_start();
 require_once('config.php'); 
 require_once('validate_session.php');
 
-if (isset($_SESSION['user'])) {
-    $userID = $_SESSION['user'];  
+if (isset($_GET['id'])) {
+  $employeeID = $_GET['id']; 
 
-    // Get passengerID
-    $getPID = "SELECT id FROM Passenger WHERE userID = ?";
-    $stmtPID = $conn->prepare($getPID);
-    $stmtPID->bind_param('s', $userID);
-    $stmtPID->execute();
-    $resultPID = $stmtPID->get_result();
-
-    // If passenger exists
-    if ($row = $resultPID->fetch_assoc()) {
-        $passengerID = $row['id'];
-        $stmtPID->close();
-        
-        // Get completed flights for this passenger
-        $sql = "SELECT f.FlightID, f.OriginLocation, f.DestinationLocation, f.DepartureTime, f.Gate, f.AssignedAircraft, f.FlightStatus FROM booked b JOIN Flight f ON b.flightID = f.FlightID WHERE b.passengerID = ? AND f.FlightStatus = 'completed'";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('s', $passengerID); 
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        // Completed flights list
-        $flights = [];
-        while ($row = mysqli_fetch_array($result)) $flights[] = $row;
-        $stmt->close();
-    } else die("Passenger not found.");
-} else die("User is not logged in.");
+  // Get assigned flights 
+  $sql = "SELECT * FROM EmployeeFlightAssignments WHERE UserID = ?;";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param('s', $employeeID); 
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $flights = [];
+  while ($row = mysqli_fetch_array($result)) $flights[] = $row;
+  $stmt->close();
+}
 
 ?>
 
@@ -45,23 +30,23 @@ if (isset($_SESSION['user'])) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroMate - Flight History</title>
+  <title>AeroMate - Assigned Flights</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Company logo -->
   <div class="results-container" id="results">
+    <!-- Company logo -->
     <div class="brand">
-      <a href="dashboard.php?id=<?= $_SESSION['user'] ?? ''; ?>" style="text-decoration: none;">
+      <a href="dashboard.php?id=<?php echo $_SESSION['user'] ?? ''; ?>" style="text-decoration: none;">
           AeroMate <i class="fas fa-plane-departure"></i>
       </a>
     </div>
 
-    <!-- Title -->   
+    <!-- Title -->
     <div class="title">
-      Flight History
+      Assigned Flights
     </div>
 
     <!-- Display flights if exist -->
@@ -77,13 +62,15 @@ if (isset($_SESSION['user'])) {
               <p><strong>Departure Time:</strong> <?php echo $flight['DepartureTime']; ?></p>
               <p><strong>Gate:</strong> <?php echo $flight['Gate']; ?></p>
               <p><strong>Assigned Aircraft:</strong> <?php echo $flight['AssignedAircraft']; ?></p>
-              <p><strong>Flight Status:</strong> <?php echo $flight['FlightStatus']; ?></p>
+              <p><strong>Status:</strong> <?php echo $flight['FlightStatus']; ?></p>
+              <p><strong>Role:</strong> <?php echo $flight['Role']; ?></p>
             </div>
+            
           </div>
         </div>
         <?php endforeach; ?>
       <?php else: ?>
-        <p>You have no past flights.</p>
+        <p>You have no assigned upcoming flights.</p>
       <?php endif; ?>
     </div>
   </div>

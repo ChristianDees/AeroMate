@@ -15,6 +15,7 @@ if (isset($_GET['id'])) {
   $sql = "SELECT * FROM Passenger where id = '$id'";
   $result = $conn->query($sql);
   $row = mysqli_fetch_array($result);
+  $userType = $_SESSION['userType'];
 } else die();
 ?>
 
@@ -98,31 +99,61 @@ if (isset($_GET['id'])) {
   <div class="dashboard-wrapper">
     <div class="brand">AeroMate <i class="fas fa-plane-departure"></i></div>
 
-    <!-- Book Flight -->
-    <a href="book_flight.php?id=<?= $id ?>">
-      <button class="menu-button"><i class="fas fa-plane menu-icon"></i> Book a Flight</button>
-    </a>
+    <!-- Passenger Specific -->
+    <?php if ($userType == 'passenger'): ?> 
+      <!-- Book Flight -->
+      <a href="book_flight.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-plane menu-icon"></i> Book a Flight</button>
+      </a>
 
-    <!-- Upcoming Flights -->
-    <a href="upcoming_flights.php?id=<?= $id ?>">
-      <button class="menu-button"><i class="fas fa-calendar-alt menu-icon"></i> Upcoming Flights</button>
-    </a>
+      <!-- Upcoming Flights -->
+      <a href="upcoming_flights.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-calendar-alt menu-icon"></i> Upcoming Flights</button>
+      </a>
 
-    <!-- Flight History -->
-    <a href="flight_history.php?id=<?= $id ?>">
-      <button class="menu-button"><i class="fas fa-history menu-icon"></i> Flight History</button>
-    </a>
-    
-    <!-- Update Profile -->
-    <a href="update_profile_interface.php?id=<?= $id ?>">
-      <button class="menu-button"><i class="fas fa-user menu-icon"></i> My Profile</button>
+      <!-- Flight History -->
+      <a href="flight_history.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-history menu-icon"></i> Flight History</button>
+      </a>
+    <?php endif; ?>
+
+    <!-- Crewmember Specific -->
+    <?php if ($userType == 'crewmember'): ?> 
+      <!-- Assigned Flights -->
+      <a href="assigned_flights.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-plane menu-icon"></i> Assigned Flights </button>
+      </a>
+    <?php endif; ?>
+
+    <!-- Admin Specific -->
+    <?php if ($userType == 'admin'): ?> 
+      <!-- Assign Crewmembers -->
+      <a href="admin_assign.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-users menu-icon"></i> Assign Crewmembers </button>
+      </a>
+
+      <!-- Manage Airlines -->
+      <a href="admin_airlines.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-building menu-icon"></i> Manage Airlines </button>
+      </a>
+
+      <!-- Manage Flights -->
+      <a href="admin_flights.php?id=<?= $id ?>">
+        <button class="menu-button"><i class="fas fa-plane menu-icon"></i> Manage Flights </button>
+      </a>
+    <?php endif; ?>
+
+    <!-- Update Account -->
+    <a href="account_interface.php?id=<?= $id ?>">
+      <button class="menu-button"><i class="fas fa-user menu-icon"></i> My Profile </button>
     </a>
 
     <!-- Logout -->
-    <a href="index.php?id=<?= $id ?>">
-      <button class="logout-btn"><i class="fas fa-sign-out-alt menu-icon"></i> Logout</button>
+    <a href="logout.php">
+      <button class="logout-btn">
+        <i class="fas fa-sign-out-alt menu-icon"></i> Logout
+      </button>
     </a>
   </div>
-
 </body>
 </html>

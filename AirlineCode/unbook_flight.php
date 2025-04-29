@@ -10,21 +10,35 @@ require_once('config.php');
 require_once('validate_session.php');
 
 if (isset($_GET['flightID']) && isset($_GET['userID'])) {
-    // Get flight id and user id
     $flightID = $_GET['flightID'];
     $userID = $_GET['userID'];
 
-    // Delete a booked flight associated with user
-    $sql = "DELETE FROM booked WHERE flightID = ? AND passengerID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ss', $flightID, $userID); 
-    $stmt->execute();
-    $stmt->close();
+    // Get passengerID
+    $getPID = "SELECT id FROM Passenger WHERE userID = ?";
+    $stmtPID = $conn->prepare($getPID);
+    $stmtPID->bind_param('s', $userID);
+    $stmtPID->execute();
+    $resultPID = $stmtPID->get_result();
+    
+    // Begin unbooking
+    if ($row = mysqli_fetch_array($resultPID)) {
+        $passengerID = $row['id'];
+        $stmtPID->close();
 
-    // Redirect back to upcoming flights
-    header("Location: upcoming_flights.php?id=" . urlencode($userID) . "&flightID=" . urlencode($flightID));
+        // Delete from booked
+        $sql = "DELETE FROM Booked WHERE flightID = ? AND passengerID = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('ss', $flightID, $passengerID);
+        $stmt->execute();
+        $stmt->close();
 
-} else die();
+        // Redirect back to upcoming_flights
+        header("Location: upcoming_flights.php?id=" . urlencode($userID) . "&flightID=" . urlencode($flightID));
+        exit();
+
+    } else {
+        $stmtPID->close();
+        die("Passenger not found.");
+    }
+} else die("Invalid request.");
 ?>
-
-

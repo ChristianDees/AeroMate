@@ -6,7 +6,7 @@ April 26, 2025
 
 <?php
 // Chcek if logged in, if not redirect to log in page
-if (!isset($_SESSION['logged_in']) || empty($_SESSION['logged_in'])) { 
+if (!isset($_SESSION['loggedIn']) || empty($_SESSION['loggedIn'])) { 
     echo "<script>
             alert('To access this page, please log in');
             window.location.href = 'index.php';
