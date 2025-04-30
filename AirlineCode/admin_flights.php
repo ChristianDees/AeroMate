@@ -7,6 +7,7 @@ April 26, 2025
 <?php
 session_start();
 require_once('config.php');
+require_once('validate_session.php');
 
 // Adding a flight
 if (isset($_POST['addFlight'])) {
@@ -55,18 +56,30 @@ if (isset($_POST['addFlight'])) {
 if (isset($_POST['deleteFlight'])) {
     $flightID = $_POST['flightID'];
 
-    // Bind and delete flight
-    $deleteQuery = $conn->prepare("DELETE FROM flight WHERE FlightID = ?");
-    $deleteQuery->bind_param("s", $flightID); 
-    $deleteResult = $deleteQuery->execute();
+    // Delete from booked
+    $deleteBookedQuery = $conn->prepare("DELETE FROM booked WHERE FlightID = ?");
+    $deleteBookedQuery->bind_param("s", $flightID); 
+    $deleteBookedResult = $deleteBookedQuery->execute();
 
-    // Bind and delete times
-    $deleteArrivalQuery = $conn->prepare("DELETE FROM departure_arrival WHERE FlightID = ?");
-    $deleteArrivalQuery->bind_param("s", $flightID); 
-    $deleteArrivalResult = $deleteArrivalQuery->execute();
+    // Check if arrival deletion was successful before deleting flight
+    if ($deleteBookedResult) {
 
-    $msg = ($deleteResult && $deleteArrivalResult) ? "Flight $flightID deleted successfully!" : "Failed to delete flight.";
+        // Delete from departure_arrival
+        $deleteDPquery = $conn->prepare("DELETE FROM departure_arrival WHERE FlightID = ?");
+        $deleteDPquery->bind_param("s", $flightID); 
+        $deleteDPresult = $deleteDPquery->execute();
+
+        if ($deleteDPresult) {
+            // Delete the flight
+            $deleteQuery = $conn->prepare("DELETE FROM flight WHERE FlightID = ?");
+            $deleteQuery->bind_param("s", $flightID); 
+            $deleteResult = $deleteQuery->execute();
+
+            $msg = $deleteResult ? "Flight $flightID deleted successfully!" : "Failed to delete flight.";
+        } else $msg = "Failed to delete related depature_arrival records.";
+    } else $msg = "Failed to delete related booked records.";
 }
+
 
 // Modify flight
 if (isset($_POST['modifyFlight'])) {
@@ -92,14 +105,99 @@ if (isset($_POST['modifyFlight'])) {
     $updateArrivalQuery = "UPDATE departure_arrival SET ArrivalTime='$arrivalTimeFormatted' WHERE FlightID = '$flightID'";
     $updateArrivalResult = mysqli_query($conn, $updateArrivalQuery);
 
+    // FrequentFlyer update logic ONLY IF flight is now marked as Completed
+    if (strtolower($flightStatus) === 'completed') {
+        // Get all PassengerIDs linked to this flight
+        $getPassengersQuery = "SELECT PassengerID FROM Booked WHERE FlightID = ?";
+        $stmt = $conn->prepare($getPassengersQuery);
+        $stmt->bind_param('s', $flightID);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = mysqli_fetch_array($result)) {
+            $passengerID = $row['PassengerID'];
+
+            // Count how many completed flights this passenger has
+            $countCompleted = "SELECT COUNT(*) as completedCount FROM Booked JOIN Flight ON Booked.FlightID = Flight.FlightID WHERE Booked.PassengerID = ? AND Flight.FlightStatus = 'Completed'";
+            $stmtCount = $conn->prepare($countCompleted);
+            $stmtCount->bind_param('s', $passengerID);
+            $stmtCount->execute();
+            $resultCount = $stmtCount->get_result();
+
+            if ($countRow = $resultCount->fetch_assoc()) {
+                $completedFlights = $countRow['completedCount'];
+                $ffStatus = ($completedFlights >= 3) ? 1 : 0;
+
+                // Update frequentFlyer field
+                $updateFF = "UPDATE Passenger SET frequentFlyer = ? WHERE id = ?";
+                $stmtUpdate = $conn->prepare($updateFF);
+                $stmtUpdate->bind_param('is', $ffStatus, $passengerID);
+                $stmtUpdate->execute();
+                $stmtUpdate->close();
+            }
+            $stmtCount->close();
+        }
+        $stmt->close();
+    }
+
     $msg = ($updateResult && $updateArrivalResult) ? "Flight $flightID updated successfully!" : "Failed to modify flight.";
 }
+
 
 $airlinesQuery = "SELECT AirlineID, Name FROM airline";
 $airlinesResult = mysqli_query($conn, $airlinesQuery);
 
-// Get all flight details
-$flights = mysqli_query($conn, "SELECT * FROM FlightDetails");
+// Initial query to fetch all flights with airline name
+$flightsQuery = "SELECT FlightDetails.*, Airline.Name AS AirlineName FROM FlightDetails LEFT JOIN Airline ON FlightDetails.AirlineID = Airline.AirlineID";
+
+// Apply filters if the search form is submitted
+if (isset($_POST['searchFlight'])) {
+    $filters = [];
+
+    // Get filters
+    if (!empty($_POST['departureTime'])) {
+        $departureTime = date('Y-m-d H:i:s', strtotime(str_replace('T', ' ', $_POST['departureTime']) . ':00'));
+        $filters[] = "DepartureTime = '$departureTime'";
+    }
+    if (!empty($_POST['gate'])) {
+        $gate = mysqli_real_escape_string($conn, $_POST['gate']);
+        $filters[] = "Gate LIKE '%$gate%'";
+    }
+    if (!empty($_POST['originLocation'])) {
+        $originLocation = mysqli_real_escape_string($conn, $_POST['originLocation']);
+        $filters[] = "OriginLocation LIKE '%$originLocation%'";
+    }
+    if (!empty($_POST['destinationLocation'])) {
+        $destinationLocation = mysqli_real_escape_string($conn, $_POST['destinationLocation']);
+        $filters[] = "DestinationLocation LIKE '%$destinationLocation%'";
+    }
+    if (!empty($_POST['assignedAircraft'])) {
+        $assignedAircraft = mysqli_real_escape_string($conn, $_POST['assignedAircraft']);
+        $filters[] = "AssignedAircraft LIKE '%$assignedAircraft%'";
+    }
+    if (!empty($_POST['flightStatus'])) {
+        $flightStatus = mysqli_real_escape_string($conn, $_POST['flightStatus']);
+        $filters[] = "FlightStatus LIKE '%$flightStatus%'";
+    }
+    if (!empty($_POST['arrivalTime'])) {
+        $arrivalTime = date('Y-m-d H:i:s', strtotime(str_replace('T', ' ', $_POST['arrivalTime']) . ':00'));
+        $filters[] = "ArrivalTime = '$arrivalTime'";
+    }
+    if (!empty($_POST['airlineID'])) {
+        $airlineID = mysqli_real_escape_string($conn, $_POST['airlineID']);
+        $filters[] = "FlightDetails.AirlineID = '$airlineID'"; 
+    }
+
+    // Add filters 
+    if (!empty($filters)) $flightsQuery .= " WHERE " . implode(" AND ", $filters);
+
+    $msg = "Search results filtered by entered criteria.";
+}
+
+// Execute the query and get the results
+$flights = mysqli_query($conn, $flightsQuery);
+
+
 
 $passengersByFlight = [];
 // Get all passengers for each flight
@@ -241,7 +339,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     <?php endif; ?>
 
     <!-- Add Flight Form-->
-    <form method="post" action="admin_flights.php">
+    <form method="post" action="admin_flights.php" id="flightForm">
 
         <!-- Departure Time -->
         <div class="mb-3 form-group">
@@ -314,13 +412,17 @@ while ($row = mysqli_fetch_assoc($result)) {
             </select>
         </div>
 
-        <button type="submit" name="addFlight" class="btn btn-primary w-100">Add Flight</button>
+        <div class="d-flex gap-2">
+            <button type="submit" name="searchFlight" class="btn btn-secondary w-100" id="searchBtn">Search Flights</button>
+            <button type="submit" name="addFlight" class="btn btn-primary w-100" id="addBtn">Add Flight</button>
+        </div>
+
     </form>
 
     <br>
 
     <!-- Display all flights -->
-    <div class="list-group">
+    <div class="list-group" id="results-section">
         <?php while ($flight = mysqli_fetch_array($flights)): ?>
             <div class="flight-item position-relative mb-3 p-3 border rounded shadow-sm">
 
@@ -361,6 +463,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <p><strong>Destination Location:</strong> <?php echo $flight['DestinationLocation']; ?></p>
                     <p><strong>Assigned Aircraft:</strong> <?php echo $flight['AssignedAircraft']; ?></p>
                     <p><strong>Flight Status:</strong> <?php echo $flight['FlightStatus']; ?></p>
+                    <p><strong>Airline:</strong> <?php echo $flight['AirlineName']; ?></p> 
                 </div>
             </div>
 
@@ -503,5 +606,28 @@ while ($row = mysqli_fetch_assoc($result)) {
         <?php endwhile; ?>
     </div>
 </div>
+<script>
+    const searchBtn = document.getElementById('searchBtn');
+    const flightForm = document.getElementById('flightForm');
+    
+    const requiredFields = [
+        'departureTime',
+        'gate',
+        'originLocation',
+        'destinationLocation',
+        'assignedAircraft',
+        'flightStatus',
+        'arrivalTime',
+        'airlineID'
+    ];
+
+    // Set all fields as not required when searching for a flight
+    searchBtn.addEventListener('click', function () {
+        requiredFields.forEach(fieldId => {
+            document.getElementById(fieldId).required = false;
+        });
+    });
+</script>
+
 </body>
 </html>

@@ -113,7 +113,7 @@ if (isset($_GET['type']) || !empty($_SESSION['userType'])) {
                 <i class="fa-solid fa-passport"></i>
                 Passport Number
               </label>
-              <input type="text" class="form-control" id="passportNumber" name="passportNumber" value="<?php echo $passengerRow['PassportNumber'] ?? ''; ?>" placeholder="1234567890" required>
+              <input type="text" class="form-control" id="passportNumber" name="passportNumber" value="<?php echo $passengerRow['PassportNumber'] ?? ''; ?>" placeholder="123456789" required>
             </div>
           <?php endif; ?>
           <!-- Password -->
@@ -191,11 +191,8 @@ if (isset($_GET['type']) || !empty($_SESSION['userType'])) {
                   </label>
                   <p class="form-control-plaintext">
                       <?php
-                          if (isset($passengerRow)) {
-                            echo $passengerRow['FrequentFlyer'] == 1 ? 'You\'re a frequent flyer!' : 'Fly more to earn frequent flyer status.';
-                          } else {
-                              echo 'No';
-                          }
+                          if (isset($passengerRow)) echo $passengerRow['FrequentFlyer'] == 1 ? 'You\'re a frequent flyer!' : 'Fly more to earn frequent flyer status.';
+                          else echo 'No';
                       ?>
                   </p>
               </div>

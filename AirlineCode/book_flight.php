@@ -88,15 +88,10 @@ if (isset($_POST['bookFlightID'])) {
           $bookFlight = "INSERT INTO Booked VALUES (?, ?, 'Booked')";
           $stmtB = $conn->prepare($bookFlight);
           $stmtB->bind_param('ss', $passengerID, $flightID);
-          if ($stmtB->execute()) {
-              $bookingMsg = "Flight $flightID successfully booked!";
-          } else {
-              $bookingMsg = "Failed to book flight. Please try again.";
-          }
+          if ($stmtB->execute()) $bookingMsg = "Flight $flightID successfully booked!";
+          else $bookingMsg = "Failed to book flight. Please try again.";
           $stmtB->close();
-      } else {
-          $bookingMsg = "Passenger record not found.";
-      }
+      } else $bookingMsg = "Passenger record not found.";
       $stmtPID->close();
   }
   $stmt->close();

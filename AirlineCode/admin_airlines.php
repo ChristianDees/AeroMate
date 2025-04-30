@@ -7,7 +7,7 @@ April 26, 2025
 <?php
 session_start();
 require_once('config.php');
-//require_once('validate_session.php');
+require_once('validate_session.php');
 
 // Adding new airline
 $searchQuery = [];  // for WHERE conditions
@@ -33,6 +33,7 @@ if (isset($_POST['addAirline'])) {
             $msg = $insertResult ? "Airline '$airlineName' added successfully!" : "Failed to add airline.";
         } else $msg = "Error";
     } else $msg = "Please fill in all fields correctly to add an airline.";
+    header("Location: admin_airlines.php");
 }
 
 // Search airline 
@@ -97,6 +98,7 @@ if (isset($_POST['deleteAirline'])) {
         else $msg = "Failed to delete airline.";
         $stmt->close();
     } else $msg = "Failed to prepare the statement.";
+    header("Location: admin_airlines.php");
 }
 
 // Modify airline

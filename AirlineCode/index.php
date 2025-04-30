@@ -144,8 +144,8 @@ if (!empty($_POST) && isset($_POST['Submit'])) {
 
       <!-- Email -->
       <div class="mb-3">
-        <label for="email" class="form-label">Email address</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+        <label for="text" class="form-label">Email address</label>
+        <input type="text" class="form-control" id="email" name="email" placeholder="Enter email" required>
       </div>
 
       <!-- Password -->
@@ -195,7 +195,7 @@ if (!empty($_POST) && isset($_POST['Submit'])) {
         emailLabel.textContent = 'Username';
       } else {
         signupBtn.disabled = false;
-        emailField.setAttribute('type', 'email');
+        //emailField.setAttribute('type', 'email');
         emailField.setAttribute('placeholder', 'Enter email');
         emailLabel.textContent = 'Email address';
       }
