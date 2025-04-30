@@ -85,6 +85,20 @@ if ($id) {
 // Create new user 
 } else {
     $userType = $_POST['type'] ?? "";
+
+    // Check for duplicate email
+    $checkQuery = "SELECT ID FROM users WHERE Email = ?";
+    $checkStmt = $conn->prepare($checkQuery);
+    $checkStmt->bind_param("s", $email);
+    $checkStmt->execute();
+    $checkStmt->store_result();
+
+    if ($checkStmt->num_rows > 0) {
+        $msg = "Email already exists. Please use a different email.";
+        echo "<script>alert(" . json_encode($msg) . "); window.location.href='account_interface.php?type=$userType';</script>";
+        exit;
+    }
+
     // Insert new user details
     $queryUsers = "INSERT INTO users (FirstName, LastName, Email, Password, Type) VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($queryUsers);
