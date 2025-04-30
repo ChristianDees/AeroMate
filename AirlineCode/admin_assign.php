@@ -1,6 +1,6 @@
 <!--
 Authors: Lauren Alvarado, Christian Dees, Yashar Keyvan, and Aitiana Mondragon
-CS 4342
+CS 4342958
 April 26, 2025
 -->
 
@@ -58,7 +58,7 @@ if (isset($_POST['assignCrew'])) {
 
     // Prevent duplicate entry
     if ($canAssign) {
-        
+
         // Get departure and arrival times of the flight being assigned
         $newFlightQuery = mysqli_query($conn, "
             SELECT f.DepartureTime, da.ArrivalTime 

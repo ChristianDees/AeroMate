@@ -7,24 +7,80 @@ April 26, 2025
 <?php
 session_start();
 require_once('config.php');
-require_once('validate_session.php');
+//require_once('validate_session.php');
 
 // Adding new airline
+$searchQuery = [];  // for WHERE conditions
+$bindTypes = "";
+$bindValues = [];
+
+// Add new airline
 if (isset($_POST['addAirline'])) {
+
+    // Get new airline values
     $airlineName = $_POST['airlineName'] ?? "";
     $headquartersAddress = $_POST['headquartersAddress'] ?? "";
     $contactInformation = $_POST['contactInformation'] ?? ""; 
     $fleetSize = $_POST['fleetSize'] ?? "";
 
-    // Prepare the SQL statement
-    $stmt = $conn->prepare("INSERT INTO airline (Name, HeadquartersAddress, ContactInformation, fleetsize) VALUES (?, ?, ?, ?)");
-    if ($stmt) {
-        // Bind params and execute
-        $stmt->bind_param("sssi", $airlineName, $headquartersAddress, $contactInformation, $fleetSize);
-        $insertResult = $stmt->execute();
-        $stmt->close();
-        $msg = $insertResult ? "Airline $airlineName added successfully!" : "Failed to add airline.";
-    } else $msg = "Database error: Unable to prepare statement.";
+    // Insert new airline
+    if (!empty($airlineName) && !empty($headquartersAddress) && !empty($contactInformation) && is_numeric($fleetSize)) {
+        $stmt = $conn->prepare("INSERT INTO airline (Name, HeadquartersAddress, ContactInformation, fleetsize) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("sssi", $airlineName, $headquartersAddress, $contactInformation, $fleetSize);
+            $insertResult = $stmt->execute();
+            $stmt->close();
+            $msg = $insertResult ? "Airline '$airlineName' added successfully!" : "Failed to add airline.";
+        } else $msg = "Error";
+    } else $msg = "Please fill in all fields correctly to add an airline.";
+}
+
+// Search airline 
+if (isset($_POST['searchAirline'])) {
+
+    // Get fields
+    $airlineName = $_POST['airlineName'] ?? "";
+    $headquartersAddress = $_POST['headquartersAddress'] ?? "";
+    $contactInformation = $_POST['contactInformation'] ?? "";
+    $fleetSize = $_POST['fleetSize'] ?? "";
+
+    // Default query
+    $sql = "SELECT * FROM airline WHERE 1=1";
+
+    // Get by name
+    if (!empty($airlineName)) {
+        $sql .= " AND Name LIKE ?";
+        $bindTypes .= "s";
+        $bindValues[] = "%" . $airlineName . "%";
+    }
+    // Get by headquarters
+    if (!empty($headquartersAddress)) {
+        $sql .= " AND HeadquartersAddress LIKE ?";
+        $bindTypes .= "s";
+        $bindValues[] = "%" . $headquartersAddress . "%";
+    }
+    // Get by contact info
+    if (!empty($contactInformation)) {
+        $sql .= " AND ContactInformation LIKE ?";
+        $bindTypes .= "s";
+        $bindValues[] = "%" . $contactInformation . "%";
+    }
+    // Get by fleet size
+    if (!empty($fleetSize) && is_numeric($fleetSize)) {
+        $sql .= " AND fleetsize = ?";
+        $bindTypes .= "i";
+        $bindValues[] = (int)$fleetSize;
+    }
+    // Bind params
+    $stmt = $conn->prepare($sql);
+    if ($stmt && $bindTypes) $stmt->bind_param($bindTypes, ...$bindValues);
+    $stmt->execute();
+    $airlines = $stmt->get_result();
+    $stmt->close();
+    $msg = $airlines->num_rows > 0 ? "Showing filtered results." : "No matching airlines found.";
+} else {
+    // Get all airlines for display
+    $airlines = mysqli_query($conn, "SELECT * FROM airline");
 }
 
 // Delete airline
@@ -42,7 +98,6 @@ if (isset($_POST['deleteAirline'])) {
         $stmt->close();
     } else $msg = "Failed to prepare the statement.";
 }
-
 
 // Modify airline
 if (isset($_POST['modifyAirline'])) {
@@ -65,8 +120,7 @@ if (isset($_POST['modifyAirline'])) {
     } else $msg = "Failed to prepare update statement.";
 }
 
-// Get all airlines for display
-$airlines = mysqli_query($conn, "SELECT * FROM airline");
+
 ?>
 
 <!DOCTYPE html>
@@ -198,48 +252,58 @@ $airlines = mysqli_query($conn, "SELECT * FROM airline");
         </div>
     <?php endif; ?>
 
-    <!-- Add Airline Form -->
-    <form method="post" action="admin_airlines.php">
+    <!-- Add/Search Airline Form -->
+    <form id="airlineForm" method="post" action="admin_airlines.php">
 
-        <!-- Name -->
-        <div class="mb-3 form-group">
-            <label for="airlineName" class="form-label">
-                <i class="fas fa-building"></i> Airline Name
-            </label>
-            <input type="text" class="form-control" name="airlineName" id="airlineName" required>
-        </div>
+    <!-- Airline Name -->
+    <div class="mb-3 form-group">
+        <label for="airlineName" class="form-label">
+            <i class="fas fa-building"></i> Airline Name
+        </label>
+        <input type="text" class="form-control" name="airlineName" id="airlineName"
+            value="<?php echo htmlspecialchars($_POST['airlineName'] ?? '', ENT_QUOTES); ?>">
+    </div>
 
-        <!-- Headquarters -->
-        <div class="mb-3 form-group">
-            <label for="headquartersAddress" class="form-label">
-                <i class="fas fa-map-marker-alt"></i> Headquarters Address
-            </label>
-            <input type="text" class="form-control" name="headquartersAddress" id="headquartersAddress" required>
-        </div>
+    <!-- Headquarters -->
+    <div class="mb-3 form-group">
+        <label for="headquartersAddress" class="form-label">
+            <i class="fas fa-map-marker-alt"></i> Headquarters Address
+        </label>
+        <input type="text" class="form-control" name="headquartersAddress" id="headquartersAddress"
+            value="<?php echo htmlspecialchars($_POST['headquartersAddress'] ?? '', ENT_QUOTES); ?>">
+    </div>
 
-        <!-- Contact Info -->
-        <div class="mb-3 form-group">
-            <label for="contactInformation" class="form-label">
-                <i class="fas fa-phone-alt"></i> Contact Information
-            </label>
-            <input type="text" class="form-control" name="contactInformation" id="contactInformation" required>
-        </div>
+    <!-- Contact Info -->
+    <div class="mb-3 form-group">
+        <label for="contactInformation" class="form-label">
+            <i class="fas fa-phone-alt"></i> Contact Information
+        </label>
+        <input type="text" class="form-control" name="contactInformation" id="contactInformation"
+            value="<?php echo htmlspecialchars($_POST['contactInformation'] ?? '', ENT_QUOTES); ?>">
+    </div>
 
-        <!-- Fleet Size -->
-        <div class="mb-3 form-group">
-            <label for="fleetSize" class="form-label">
-                <i class="fas fa-plane"></i> Fleet Size
-            </label>
-            <input type="number" class="form-control" name="fleetSize" id="fleetSize" required>
-        </div>
+    <!-- Fleet Size -->
+    <div class="mb-3 form-group">
+        <label for="fleetSize" class="form-label">
+            <i class="fas fa-plane"></i> Fleet Size
+        </label>
+        <input type="number" class="form-control" name="fleetSize" id="fleetSize"
+            value="<?php echo htmlspecialchars($_POST['fleetSize'] ?? '', ENT_QUOTES); ?>">
+    </div>
 
-        <button type="submit" name="addAirline" class="btn btn-primary w-100">Add Airline</button>
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-between">
+        <button type="submit" name="searchAirline" class="btn btn-secondary w-50 me-2">Search</button>
+        <button type="submit" name="addAirline" class="btn btn-primary w-50">Add Airline</button>
+    </div>
     </form>
+
 
     <br>
 
     <!-- Display all airlines -->
-    <div class="list-group">
+     
+    <div id="results" class="list-group">
         <?php while ($airline = mysqli_fetch_array($airlines)): ?>
             <div class="airline-item position-relative mb-3 p-3 border rounded shadow-sm">
 
@@ -332,5 +396,18 @@ $airlines = mysqli_query($conn, "SELECT * FROM airline");
     </div>
 
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById('airlineForm');
+    const searchBtn = document.querySelector('button[name="searchAirline"]');
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function () {
+            form.action = "admin_airlines.php#results";
+        });
+    }
+});
+</script>
+
 </body>
 </html>

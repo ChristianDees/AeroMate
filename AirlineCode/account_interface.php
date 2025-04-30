@@ -182,19 +182,25 @@ if (isset($_GET['type']) || !empty($_SESSION['userType'])) {
             </div>
           <?php endif; ?>
 
-          <!-- Frequent Flyer -->
+          <!-- Frequent Flyer Display -->
           <?php if ($userType == 'passenger'): ?>
               <div class="mb-4 input-icon">
-                  <label for="frequentFlyer" class="form-label">
+                  <label class="form-label">
                       <i class="fas fa-check-circle"></i> 
                       Frequent Flyer
                   </label>
-                  <select id="frequentFlyer" name="frequentFlyer" class="form-control" required>
-                      <option value="0" <?php echo (isset($passengerRow) && $passengerRow['FrequentFlyer'] == 0) ? 'selected' : ''; ?>>No</option>
-                      <option value="1" <?php echo (isset($passengerRow) && $passengerRow['FrequentFlyer'] == 1) ? 'selected' : ''; ?>>Yes</option>
-                  </select>
+                  <p class="form-control-plaintext">
+                      <?php
+                          if (isset($passengerRow)) {
+                            echo $passengerRow['FrequentFlyer'] == 1 ? 'You\'re a frequent flyer!' : 'Fly more to earn frequent flyer status.';
+                          } else {
+                              echo 'No';
+                          }
+                      ?>
+                  </p>
               </div>
           <?php endif; ?>
+
 
           <!-- Confirm Password -->
           <div class="mb-4 input-icon">
