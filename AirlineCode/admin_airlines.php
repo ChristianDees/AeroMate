@@ -30,10 +30,11 @@ if (isset($_POST['addAirline'])) {
             $stmt->bind_param("sssi", $airlineName, $headquartersAddress, $contactInformation, $fleetSize);
             $insertResult = $stmt->execute();
             $stmt->close();
-            $msg = $insertResult ? "Airline '$airlineName' added successfully!" : "Failed to add airline.";
-        } else $msg = "Error";
+            $message = $insertResult ? "Airline $airlineName added successfully!" : "Failed to add airline.";
+            header("Location: admin_airlines.php?msg=" . urlencode($message));
+            exit();
+        } else  $msg = "Error";
     } else $msg = "Please fill in all fields correctly to add an airline.";
-    
 }
 
 // Search airline 
@@ -87,19 +88,32 @@ if (isset($_POST['searchAirline'])) {
 // Delete airline
 if (isset($_POST['deleteAirline'])) {
     $airlineID = $_POST['airlineID'];
-    // Delete statement
+
+    // Get airline name
+    $nameQuery = $conn->prepare("SELECT Name FROM airline WHERE AirlineID = ?");
+    $airlineName = null;
+    if ($nameQuery) {
+        $nameQuery->bind_param("i", $airlineID);
+        $nameQuery->execute();
+        $nameQuery->bind_result($airlineName);
+        $nameQuery->fetch();
+        $nameQuery->close();
+    }
+
+    // Delete from airline
     $stmt = $conn->prepare("DELETE FROM airline WHERE AirlineID = ?");
     if ($stmt) {
-        // Bind and execute
         $stmt->bind_param("i", $airlineID);
         $stmt->execute();
-        // Check if deleted
-        if ($stmt->affected_rows > 0) $msg = "Airline $airlineID deleted successfully!";
-        else $msg = "Failed to delete airline.";
+        $message = $stmt->affected_rows > 0
+            ? "Airline $airlineName deleted successfully!"
+            : "Failed to delete airline.";
         $stmt->close();
+        header("Location: admin_airlines.php?msg=" . urlencode($message));
+        exit();
     } else $msg = "Failed to prepare the statement.";
-    
 }
+
 
 // Modify airline
 if (isset($_POST['modifyAirline'])) {
@@ -108,23 +122,27 @@ if (isset($_POST['modifyAirline'])) {
     $headquartersAddress = $_POST['headquartersAddress'];
     $contactInformation = $_POST['contactInformation'];
     $fleetSize = $_POST['fleetSize'];
-    // Prepare the SQL statement
     $stmt = $conn->prepare("UPDATE airline SET Name = ?, HeadquartersAddress = ?, ContactInformation = ?, fleetsize = ? WHERE AirlineID = ?");
     if ($stmt) {
-        // Bind and execute
         $stmt->bind_param("sssii", $airlineName, $headquartersAddress, $contactInformation, $fleetSize, $airlineID);
         $stmt->execute();
-
-        // Check if updated
-        if ($stmt->affected_rows > 0) $msg = "Airline modified successfully!"; 
-        else $msg = "No changes made or airline not found.";
+        $message = $stmt->affected_rows > 0
+            ? "Airline $airlineName modified successfully!"
+            : "No changes made or airline not found.";
         $stmt->close();
-    } else $msg = "Failed to prepare update statement.";
+        header("Location: admin_airlines.php?msg=" . urlencode($message));
+        exit();
+    } else {
+        $msg = "Failed to prepare update statement.";
+    }
 }
 
-if (empty($airlines)) $airlines = mysqli_query($conn, "SELECT * FROM airline");
-
+// Fallback in case search isn't triggered
+if (empty($airlines)) {
+    $airlines = mysqli_query($conn, "SELECT * FROM airline");
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -255,6 +273,13 @@ if (empty($airlines)) $airlines = mysqli_query($conn, "SELECT * FROM airline");
         </div>
     <?php endif; ?>
 
+    <?php if (isset($_GET['msg'])): ?>
+        <div class="alert alert-info text-center">
+            <?php echo $_GET['msg']; ?>
+        </div>
+    <?php endif; ?>
+
+
     <!-- Add/Search Airline Form -->
     <form id="airlineForm" method="post" action="admin_airlines.php">
 
@@ -305,6 +330,7 @@ if (empty($airlines)) $airlines = mysqli_query($conn, "SELECT * FROM airline");
     <br>
 
     <!-- Display all airlines -->
+     
     <div id="results" class="list-group">
         <?php while ($airline = mysqli_fetch_array($airlines)): ?>
             <div class="airline-item position-relative mb-3 p-3 border rounded shadow-sm">
