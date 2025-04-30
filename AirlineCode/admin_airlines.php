@@ -137,10 +137,8 @@ if (isset($_POST['modifyAirline'])) {
     }
 }
 
-// Fallback in case search isn't triggered
-if (empty($airlines)) {
-    $airlines = mysqli_query($conn, "SELECT * FROM airline");
-}
+// In case no search
+if (empty($airlines)) $airlines = mysqli_query($conn, "SELECT * FROM airline");
 ?>
 
 
