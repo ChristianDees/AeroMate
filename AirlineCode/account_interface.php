@@ -94,16 +94,7 @@ if (isset($_GET['type']) || !empty($_SESSION['userType'])) {
               <i class="fas fa-envelope"></i> 
               Email Address
             </label>
-
-            <input 
-              type="<?= ($userType == 'admin') ? 'text' : 'email'; ?>" 
-              class="form-control" 
-              id="email" 
-              name="email" 
-              value="<?= $row['Email'] ?? ''; ?>" 
-              placeholder="johnDoe@example.com" 
-              required
-            >
+            <input type="<?= ($userType == 'admin') ? 'text' : 'email'; ?>" class="form-control" id="email" name="email" value="<?= $row['Email'] ?? ''; ?>" placeholder="johnDoe@example.com" required>
           </div>
 
           <!-- Passport Number -->
@@ -169,7 +160,6 @@ if (isset($_GET['type']) || !empty($_SESSION['userType'])) {
                   </select>
               </div>
           <?php endif; ?>
-
 
           <!-- Phone -->
           <?php if ($userType == 'passenger'): ?>

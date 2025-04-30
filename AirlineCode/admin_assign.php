@@ -173,7 +173,6 @@ while ($row = mysqli_fetch_array($result)) {
 ?>
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -276,7 +275,6 @@ while ($row = mysqli_fetch_array($result)) {
                 <p><strong>Assigned Aircraft:</strong> <?php echo $flight['AssignedAircraft']; ?></p>
                 <p><strong>Status:</strong> <?php echo $flight['FlightStatus']; ?></p>
                 <p><strong>Airline:</strong> <?php echo $flight['AirlineName']; ?></p>
-
 
                 <!-- Check for missing roles -->
                 <?php

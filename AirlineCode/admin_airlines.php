@@ -304,7 +304,6 @@ if (isset($_POST['modifyAirline'])) {
     <br>
 
     <!-- Display all airlines -->
-     
     <div id="results" class="list-group">
         <?php while ($airline = mysqli_fetch_array($airlines)): ?>
             <div class="airline-item position-relative mb-3 p-3 border rounded shadow-sm">

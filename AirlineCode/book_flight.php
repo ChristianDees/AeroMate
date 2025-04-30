@@ -31,7 +31,7 @@ $conditions = " WHERE Flight.FlightStatus != 'Completed'";
 // Airline filter 
 if (isset($_GET['airline']) && !empty($_GET['airline'])) {
     $airlineName = $_GET['airline'];
-    $joins .= " INNER JOIN Airline ON Flight.AirlineID = Airline.AirlineID"; // Match in both tables
+    $joins .= " INNER JOIN Airline ON Flight.AirlineID = Airline.AirlineID"; 
     $conditions .= " AND Airline.Name = '$airlineName'";
 }
 
@@ -47,13 +47,29 @@ if (isset($_GET['to']) && !empty($_GET['to'])) {
     $conditions .= " AND Flight.DestinationLocation = '$to'";
 }
 
+// Departure date filter
 if (isset($_GET['date']) && !empty($_GET['date'])) {
     $date = $_GET['date'];
     $conditions .= " AND Flight.DepartureTime LIKE '$date%'";
 }
 
+// Arrival date filter
+if (isset($_GET['arrival_date']) && !empty($_GET['arrival_date'])) {
+  $arrival_date = $_GET['arrival_date'];
+  $conditions .= " AND departure_arrival.ArrivalTime LIKE '$arrival_date%'";
+}
+
 // Get results from final query
-$results = $conn->query("SELECT * FROM Flight" . $joins . $conditions);
+$results = $conn->query("
+  SELECT Flight.FlightID, Flight.DepartureTime, Flight.Gate, Flight.OriginLocation, 
+         Flight.DestinationLocation, Flight.AssignedAircraft, Flight.FlightStatus, 
+         Airline.Name AS AirlineName, departure_arrival.ArrivalTime
+  FROM Flight
+  INNER JOIN Airline ON Flight.AirlineID = Airline.AirlineID
+  INNER JOIN departure_arrival ON Flight.FlightID = departure_arrival.FlightID
+  $conditions");
+
+
 $flights = [];
 while ($row = mysqli_fetch_array($results)) {$flights[] = $row;}
 
@@ -255,10 +271,19 @@ if (isset($_POST['bookFlightID'])) {
       <!-- Departure Date Filter -->
       <div class="mb-4 input-icon">
         <label for="date" class="form-label">
-          <i class="fas fa-calendar-alt"></i> Flight Date
+          <i class="fas fa-calendar-alt"></i> Departure Date
         </label>
         <input type="date" class="form-control" id="date" name="date" value="<?= $_GET['date'] ?? ''; ?>">
       </div>
+
+      <!-- Arrival Date Filter -->
+      <div class="mb-4 input-icon">
+        <label for="arrival_date" class="form-label">
+          <i class="fas fa-calendar-alt"></i> Arrival Date
+        </label>
+        <input type="date" class="form-control" id="arrival_date" name="arrival_date" value="<?= $_GET['arrival_date'] ?? ''; ?>">
+      </div>
+
 
       <!-- Airline Name Filter -->
       <div class="mb-4">
@@ -293,9 +318,11 @@ if (isset($_POST['bookFlightID'])) {
               <h5><strong>Flight ID: <?php echo $flight['FlightID']; ?></strong></h5>
               <p><strong>Route:</strong> <?php echo $flight['OriginLocation']; ?> to <?php echo $flight['DestinationLocation']; ?></p>
               <p><strong>Departure Time:</strong> <?php echo $flight['DepartureTime']; ?></p>
+              <p><strong>Arrival Time:</strong> <?php echo $flight['ArrivalTime']; ?></p>
               <p><strong>Gate:</strong> <?php echo $flight['Gate']; ?></p>
               <p><strong>Assigned Aircraft:</strong> <?php echo $flight['AssignedAircraft']; ?></p>
               <p><strong>Flight Status:</strong> <?php echo $flight['FlightStatus']; ?></p>
+              <p><strong>Airline:</strong> <?php echo $flight['AirlineName']; ?></p>
             </div>
             <div class="flight-price">
             <!-- Book flight form -->
