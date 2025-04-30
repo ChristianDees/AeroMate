@@ -144,7 +144,7 @@ if (!empty($_POST) && isset($_POST['Submit'])) {
 
       <!-- Email -->
       <div class="mb-3">
-        <label for="text" class="form-label">Email address</label>
+        <label for="email" class="form-label">Email address</label>
         <input type="text" class="form-control" id="email" name="email" placeholder="Enter email" required>
       </div>
 

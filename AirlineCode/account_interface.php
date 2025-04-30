@@ -181,7 +181,7 @@ if (isset($_GET['type']) || !empty($_SESSION['userType'])) {
                   </label>
                   <p class="form-control-plaintext">
                       <?php
-                          if (isset($passengerRow)) echo $passengerRow['FrequentFlyer'] == 1 ? 'You\'re a frequent flyer!' : 'Fly more to earn frequent flyer status.';
+                          if (isset($passengerRow)) echo $passengerRow['FrequentFlyer'] == 1 ? 'You\'re a frequent flyer!' : 'Fly more to earn frequent flyer status!';
                           else echo 'No';
                       ?>
                   </p>
