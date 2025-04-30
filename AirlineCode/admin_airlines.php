@@ -33,7 +33,7 @@ if (isset($_POST['addAirline'])) {
             $msg = $insertResult ? "Airline '$airlineName' added successfully!" : "Failed to add airline.";
         } else $msg = "Error";
     } else $msg = "Please fill in all fields correctly to add an airline.";
-    header("Location: admin_airlines.php");
+    
 }
 
 // Search airline 
@@ -98,7 +98,7 @@ if (isset($_POST['deleteAirline'])) {
         else $msg = "Failed to delete airline.";
         $stmt->close();
     } else $msg = "Failed to prepare the statement.";
-    header("Location: admin_airlines.php");
+    
 }
 
 // Modify airline
@@ -122,6 +122,7 @@ if (isset($_POST['modifyAirline'])) {
     } else $msg = "Failed to prepare update statement.";
 }
 
+if (empty($airlines)) $airlines = mysqli_query($conn, "SELECT * FROM airline");
 
 ?>
 
